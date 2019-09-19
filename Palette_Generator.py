@@ -1,7 +1,7 @@
 bl_info = {  
  "name": "Palette Generator",  
  "author": "mac7ua",  
- "version": (1, 2),
+ "version": (1, 3),
  "blender": (2, 80, 0),  
  "location": "Texture Paint",  
  "description": "Key (G) - Generate palette",  
@@ -14,6 +14,10 @@ import bpy
 import requests
 import json
 from mathutils import Color
+from inspect import getsource
+from bl_ui.properties_paint_common import (
+    UnifiedPaintPanel,
+)
         
 addon_keymaps = []
 class PaletteGenerator(bpy.types.Operator):
@@ -174,9 +178,34 @@ class PaletteGenerator(bpy.types.Operator):
             self.Colormind(context, color1, color2)
         self.CreatePalette(context)
         return {'FINISHED'}
+def draw_(self, context):
+    pass
+
+def palette_context_menu(self, context):
+    layout = self.layout
+    settings = context.tool_settings.image_paint
+    capabilities = settings.brush.image_paint_capabilities
+    if capabilities.has_color:
+        split = layout.split(factor=0.1)
+        column = split.column()
+        UnifiedPaintPanel.prop_unified_color(column, context, settings.brush, "color", text="")
+        UnifiedPaintPanel.prop_unified_color(column, context, settings.brush, "secondary_color", text="")
+        column.operator("paint.brush_colors_flip", icon='FILE_REFRESH', text="", emboss=False)
+        UnifiedPaintPanel.prop_unified_color_picker(split, context, settings.brush, "color", value_slider=True)
+        layout.prop(settings.brush, "blend", text="")
+
+    if capabilities.has_radius:
+        UnifiedPaintPanel.prop_unified_size(layout, context, settings.brush, "size", slider=True)
+    UnifiedPaintPanel.prop_unified_strength(layout, context, settings.brush, "strength")
+    if settings.palette:
+        layout.template_palette(settings, "palette", color=True)
     
 def register():
     bpy.utils.register_class(PaletteGenerator)
+    bpy.types.VIEW3D_PT_paint_texture_context_menu.append(draw_)
+    bpy.types.VIEW3D_PT_paint_texture_context_menu.draw_= bpy.types.VIEW3D_PT_paint_texture_context_menu.draw
+    bpy.types.VIEW3D_PT_paint_texture_context_menu.draw = palette_context_menu
+    
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc:
@@ -186,6 +215,8 @@ def register():
         
 def unregister():
     bpy.utils.unregister_class(PaletteGenerator)
+    bpy.types.VIEW3D_PT_paint_texture_context_menu.draw= bpy.types.VIEW3D_PT_paint_texture_context_menu.draw_
+    bpy.types.VIEW3D_PT_paint_texture_context_menu.remove(draw_)
     wm = bpy.context.window_manager
     for km in addon_keymaps:
         wm.keyconfigs.addon.keymaps.remove(km)
@@ -193,4 +224,3 @@ def unregister():
     
 if __name__ == "__main__":
     register()
-   
