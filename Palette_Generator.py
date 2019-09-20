@@ -23,6 +23,7 @@ addon_keymaps = []
 class PaletteGenerator(bpy.types.Operator):
     bl_idname = "paint.pallet_generator"
     bl_label = "PaletteGenerator"
+    bl_description = "Generate a color palette"
     bl_options = {'REGISTER', 'UNDO'}
     
     type: bpy.props.EnumProperty(items=[('mix','Mix',''),('line','Line',''),('spectrum','Spectrum',''),('colormind','Colormind.io','')], name="Type")
@@ -191,6 +192,7 @@ def palette_context_menu(self, context):
         UnifiedPaintPanel.prop_unified_color(column, context, settings.brush, "color", text="")
         UnifiedPaintPanel.prop_unified_color(column, context, settings.brush, "secondary_color", text="")
         column.operator("paint.brush_colors_flip", icon='FILE_REFRESH', text="", emboss=False)
+        column.operator(PaletteGenerator.bl_idname, icon='MOD_OPACITY', text="", emboss=False)
         UnifiedPaintPanel.prop_unified_color_picker(split, context, settings.brush, "color", value_slider=True)
         layout.prop(settings.brush, "blend", text="")
 
